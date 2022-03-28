@@ -11,13 +11,30 @@ class MahasiswaController extends Controller
  *
  * @return \Illuminate\Http\Response
  */
- public function index()
- {
- // fungsi eloquent menampilkan data menggunakan pagination
- $mahasiswa = Mahasiswa::all(); // Mengambil semua isi tabel
- $paginate = Mahasiswa::orderBy('id_mahasiswa', 'asc')->paginate(3);
- return view('mahasiswa.index', ['mahasiswa' => $mahasiswa,'paginate'=>$paginate]);
- }
+//  public function index()
+//  {
+//  // fungsi eloquent menampilkan data menggunakan pagination
+// //  $mahasiswa = Mahasiswa::all(); // Mengambil semua isi tabel
+// //  $paginate = Mahasiswa::orderBy('id_mahasiswa', 'asc')->paginate(3);
+// //  return view('mahasiswa.index', ['mahasiswa' => $mahasiswa,'paginate'=>$paginate]);
+// $mahasiswa = DB::table('mahasiswa')->simplepaginate(4);
+//     return view ('mahasiswa.index',compact('mahasiswa'));
+//  }
+
+public function index(Request $request){
+		$simplePaginate  = 4;
+        $mahasiswa   = Mahasiswa::when($request->keyword, function ($query) use ($request) {
+        $query
+        ->where('nama', 'like', "%{$request->keyword}%");
+    })->orderBy('created_at', 'asc')->simplePaginate($simplePaginate);
+
+    $mahasiswa->appends($request->only('keyword'));
+
+    return view('mahasiswa.index', [
+        'nama'    => 'Mahasiswa',
+        'mahasiswa' => $mahasiswa,
+    ])->with('i', ($request->input('simplePaginate', 1) - 1) * $simplePaginate);
+	}
  public function create()
  {
  return view('mahasiswa.create');
@@ -53,18 +70,24 @@ class MahasiswaController extends Controller
  {
 //melakukan validasi data
  $request->validate([
+ 'Email' => 'required',
  'Nim' => 'required',
  'Nama' => 'required',
  'Kelas' => 'required',
  'Jurusan' => 'required',
+ 'Alamat' => 'required',
+ 'Tanggal_Lahir' => 'required',
  ]);
 //fungsi eloquent untuk mengupdate data inputan kita
  Mahasiswa::where('nim', $nim)
  ->update([
+'email'=>$request->Email,
  'nim'=>$request->Nim,
  'nama'=>$request->Nama,
  'kelas'=>$request->Kelas,
  'jurusan'=>$request->Jurusan,
+ 'alamat'=>$request->Alamat,
+ 'tanggal_lahir'=>$request->Tanggal_Lahir,
  ]);
 //jika data berhasil diupdate, akan kembali ke halaman utama
  return redirect()->route('mahasiswa.index')
