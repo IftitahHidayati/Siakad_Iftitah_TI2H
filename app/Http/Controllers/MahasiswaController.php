@@ -1,9 +1,10 @@
 <?php
 namespace App\Http\Controllers;
-use App\Models\Mahasiswa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\Mahasiswa;
 use App\Models\Kelas;
+use App\Models\Mahasiswa_MataKuliah;
 
 class MahasiswaController extends Controller
 {
@@ -77,7 +78,7 @@ class MahasiswaController extends Controller
  //menampilkan detail data dengan menemukan/berdasarkan Nim Mahasiswa
 //  $Mahasiswa = Mahasiswa::where('nim', $nim)->first();
     $Mahasiswa = Mahasiswa::with('kelas')->where('nim',$nim)->first();
-    return view('mahasiswa.detail', ['Mahasiswa'=>$mahasiswa]);
+    return view('mahasiswa.detail', ['Mahasiswa'=>$Mahasiswa]);
  }
  public function edit($nim)
  {
@@ -123,4 +124,15 @@ public function destroy( $nim)
     return redirect()->route('mahasiswa.index')
     -> with('success', 'Mahasiswa Berhasil Dihapus');
  }
+ public function khs($nim){
+    $mhs = Mahasiswa::where('nim', $nim)->first();
+    $nilai = Mahasiswa_MataKuliah::where('mahasiswa_id', $mhs->id_mahasiswa)
+                                   ->with('matakuliah')
+                                   ->with('mahasiswa')
+                                   ->get();
+    $nilai->mahasiswa = Mahasiswa::with('kelas')->where('nim', $nim)->first();
+    // dd($nilai);
+    
+    return view('mahasiswa.khs', compact('nilai'));
+}
 }; 
